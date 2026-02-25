@@ -1,0 +1,594 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum ConsignmentStatus {
+  DFT       // Draft
+  BOOK      // Booked
+  DISP      // Dispatched
+  INTRANS   // In Transit
+  XDOCK     // Cross-docked
+  COMP      // Complete
+  FUP       // Futile Pickup
+  FUTDEL    // Futile Delivery
+  PARTDEL   // Partial Delivery
+}
+
+enum TaskType {
+  // Movement
+  VPREP  // Vehicle Preparation
+  PUP    // Pickup
+  DEL    // Delivery
+  LHL    // Line Haul
+  RTD    // Return to Depot
+  DTR    // Driver Transfer
+
+  // Warehouse
+  XDI    // Cross-dock Inbound
+  XDS    // Cross-dock Storage
+  XDO    // Cross-dock Outbound
+  CLO    // Carton Loose Out
+  CUL    // Carton Unload
+  CPU    // Carton Pickup
+  CDR    // Carton Delivery
+
+  // Services
+  TGT    // Tailgate
+  HLD    // Hold
+  FLL    // Full Load
+  UNP    // Unpack
+  ASM    // Assembly
+  STC    // Stair Carry
+  RUB    // Rubbish Removal
+  PLC    // Placement
+  WRP    // Wrapping
+  WTM    // Waiting Time
+  SIN    // Site Induction
+  DBR    // Debris Removal
+}
+
+enum TaskStatus {
+  PENDING
+  ASSIGNED
+  INPROG
+  DONE
+  FUTILE
+}
+
+enum ManifestStatus {
+  DRAFT
+  CONFIRMED
+  INPROG
+  COMPLETE
+  CANCELLED
+}
+
+enum ScanType {
+  PICKUP_FROM_CUSTOMER
+  ARRIVE_DEPOT_INBOUND
+  CROSSDOCK_STORAGE
+  LOAD_OUTBOUND_VEHICLE
+  ARRIVE_DEST_DEPOT
+  LOAD_DELIVERY_VEHICLE
+  DELIVERED_TO_CUSTOMER
+  PARTIAL_DELIVERY
+  RETURN_TO_DEPOT
+  DAMAGE_REPORTED
+}
+
+enum DiscrepancyType {
+  ITEM_COUNT_MISMATCH
+  MISSING_AT_CROSSDOCK
+  WRONG_DESTINATION
+  UNEXPECTED_ITEM
+}
+
+enum DiscrepancyStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum SubcontractorJobStatus {
+  ASSIGNED
+  ACKNOWLEDGED
+  PICKUP_COMPLETE
+  IN_TRANSIT
+  DELIVERED
+  FUTILE
+  UNKNOWN_STATUS
+}
+
+enum EscalationLevel {
+  NONE
+  DISPATCHER
+  MANAGER
+  AUTO_EMAIL_SENT
+}
+
+enum RolloutProjectStatus {
+  DRAFT
+  ACTIVE
+  INPROGRESS
+  COMPLETE
+  CANCELLED
+}
+
+enum RolloutWaveStatus {
+  PLANNED
+  INPROGRESS
+  COMPLETE
+  CANCELLED
+}
+
+enum ItemType {
+  PALLET
+  TROLLEY
+  FURNITURE
+  LOOSE
+  CARTON
+  UNKNOWN
+}
+
+enum AuditEntityType {
+  CONSIGNMENT
+  TASK
+  MANIFEST
+  SCAN_EVENT
+  SUBCONTRACTOR_JOB
+  ROLLOUT_PROJECT
+  ROLLOUT_WAVE
+}
+
+enum ChargeType {
+  FLAT_RATE
+  PER_SITE
+  PER_M3
+  PER_PS
+  PER_HOUR
+  PER_ITEM
+}
+
+// ─── Core Models ─────────────────────────────────────────────────────────────
+
+model Customer {
+  id            String   @id @default(uuid())
+  name          String
+  code          String   @unique
+  email         String?
+  phone         String?
+  address       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  consignments      Consignment[]
+  subcontractorJobs SubcontractorJob[]
+  rolloutProjects   RolloutProject[]
+
+  @@index([code])
+}
+
+model Consignment {
+  id                  String             @id @default(uuid())
+  connoteNumber       String             @unique
+  status              ConsignmentStatus  @default(DFT)
+  customerId          String
+  customer            Customer           @relation(fields: [customerId], references: [id])
+
+  pickupAddress       String
+  deliveryAddress     String
+  pickupDate          DateTime?
+  deliveryDate        DateTime?
+
+  totalPS             Float              @default(0)
+  totalM3             Float              @default(0)
+  totalWeightKg       Float              @default(0)
+  quotedRevenueCents  Int                @default(0)
+
+  isPotentialDuplicate  Boolean          @default(false)
+  duplicateOfId         String?
+
+  rolloutProjectId    String?
+  rolloutProject      RolloutProject?    @relation(fields: [rolloutProjectId], references: [id])
+  rolloutWaveId       String?
+  rolloutWave         RolloutWave?       @relation(fields: [rolloutWaveId], references: [id])
+
+  specialInstructions String?
+  referenceNumbers    String[]
+
+  items               FreightItem[]
+  tasks               Task[]
+  manifests           Manifest[]         @relation("ManifestConsignments")
+  auditLogs           AuditLog[]
+  scanEvents          ScanEvent[]
+
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  @@index([connoteNumber])
+  @@index([customerId])
+  @@index([status])
+  @@index([rolloutProjectId])
+}
+
+model FreightItem {
+  id               String      @id @default(uuid())
+  consignmentId    String
+  consignment      Consignment @relation(fields: [consignmentId], references: [id], onDelete: Cascade)
+
+  description      String
+  itemType         ItemType    @default(UNKNOWN)
+  quantity         Int         @default(1)
+
+  widthMm          Float?
+  depthMm          Float?
+  heightMm         Float?
+  weightKgEach     Float?
+
+  stackable        Boolean     @default(true)
+  specialHandling  String?
+
+  // Computed freight metrics
+  palletSpaces     Float       @default(0)
+  m3               Float       @default(0)
+  chargeableM3     Float       @default(0)
+  isOverheight     Boolean     @default(false)
+  isOversized      Boolean     @default(false)
+
+  // Label / scanning
+  itemCode         String      @unique  // e.g. SVC7260-001
+  sequence         Int
+
+  scanEvents       ScanEvent[]
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([consignmentId])
+  @@index([itemCode])
+}
+
+model Driver {
+  id             String   @id @default(uuid())
+  name           String
+  email          String   @unique
+  phone          String?
+  licenceClass   String   // e.g. LR, MR, HR, HC, MC
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tasks          Task[]
+  manifests      Manifest[]
+}
+
+model Vehicle {
+  id             String   @id @default(uuid())
+  registration   String   @unique
+  vehicleType    String   // e.g. "3T Rigid", "Semi Trailer"
+  maxPS          Float
+  maxM3          Float
+  maxWeightKg    Float
+  requiredLicenceClass String
+  isActive       Boolean  @default(true)
+  hasTailgate    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tasks          Task[]
+  manifests      Manifest[]
+}
+
+model Depot {
+  id        String     @id @default(uuid())
+  name      String
+  code      String     @unique
+  address   String
+  state     String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  manifests Manifest[]
+}
+
+model Manifest {
+  id            String         @id @default(uuid())
+  manifestCode  String         @unique
+  status        ManifestStatus @default(DRAFT)
+
+  vehicleId     String?
+  vehicle       Vehicle?       @relation(fields: [vehicleId], references: [id])
+  driverId      String?
+  driver        Driver?        @relation(fields: [driverId], references: [id])
+  depotId       String?
+  depot         Depot?         @relation(fields: [depotId], references: [id])
+
+  plannedDate   DateTime
+  startedAt     DateTime?
+  completedAt   DateTime?
+
+  consignments  Consignment[]  @relation("ManifestConsignments")
+  tasks         Task[]
+  scanEvents    ScanEvent[]
+  discrepancies Discrepancy[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([manifestCode])
+  @@index([driverId])
+  @@index([vehicleId])
+  @@index([plannedDate])
+}
+
+model Task {
+  id                 String      @id @default(uuid())
+  consignmentId      String
+  consignment        Consignment @relation(fields: [consignmentId], references: [id])
+  taskType           TaskType
+  manifestId         String?
+  manifest           Manifest?   @relation(fields: [manifestId], references: [id])
+  status             TaskStatus  @default(PENDING)
+
+  estimatedCostCents Int?
+  actualCostCents    Int?
+
+  assignedDriverId   String?
+  driver             Driver?     @relation(fields: [assignedDriverId], references: [id])
+  assignedVehicleId  String?
+  vehicle            Vehicle?    @relation(fields: [assignedVehicleId], references: [id])
+
+  startedAt          DateTime?
+  completedAt        DateTime?
+  notes              String?
+
+  // Sequence for ordering within a manifest
+  sequence           Int         @default(0)
+
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@index([consignmentId])
+  @@index([manifestId])
+  @@index([status])
+}
+
+// ─── Scanning & Chain of Custody ─────────────────────────────────────────────
+
+model ScanEvent {
+  id              String      @id @default(uuid())
+  itemId          String
+  item            FreightItem @relation(fields: [itemId], references: [id])
+  consignmentId   String
+  consignment     Consignment @relation(fields: [consignmentId], references: [id])
+  manifestId      String?
+  manifest        Manifest?   @relation(fields: [manifestId], references: [id])
+
+  scanType        ScanType
+  scannedAt       DateTime    @default(now())
+  latitude        Float?
+  longitude       Float?
+  userId          String
+  conditionNote   String?
+  photoUrl        String?
+
+  createdAt       DateTime    @default(now())
+
+  @@index([itemId])
+  @@index([consignmentId])
+  @@index([manifestId])
+  @@index([scanType])
+  @@index([scannedAt])
+}
+
+model Discrepancy {
+  id             String            @id @default(uuid())
+  manifestId     String
+  manifest       Manifest          @relation(fields: [manifestId], references: [id])
+  discrepancyType DiscrepancyType
+  status         DiscrepancyStatus @default(OPEN)
+  description    String
+  itemId         String?
+  expectedCount  Int?
+  actualCount    Int?
+  resolvedAt     DateTime?
+  resolvedBy     String?
+  notes          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([manifestId])
+  @@index([status])
+}
+
+// ─── Subcontractor Integration ────────────────────────────────────────────────
+
+model Subcontractor {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  abn       String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobs      SubcontractorJob[]
+}
+
+model SubcontractorJob {
+  id                   String                 @id @default(uuid())
+  consignmentId        String                 @unique
+  subcontractorId      String
+  subcontractor        Subcontractor          @relation(fields: [subcontractorId], references: [id])
+  customerId           String?
+  customer             Customer?              @relation(fields: [customerId], references: [id])
+
+  status               SubcontractorJobStatus @default(ASSIGNED)
+  escalationLevel      EscalationLevel        @default(NONE)
+
+  signedToken          String                 @unique
+  tokenExpiresAt       DateTime
+
+  expectedDeliveryAt   DateTime
+  lastUpdateAt         DateTime?
+  deliveredAt          DateTime?
+
+  deliveryNotes        String?
+  podPhotoUrl          String?
+
+  // BullMQ job IDs for cancellation
+  escalationJob1Id     String?
+  escalationJob2Id     String?
+  escalationJob3Id     String?
+
+  statusUpdates        SubcontractorStatusUpdate[]
+
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  @@index([consignmentId])
+  @@index([subcontractorId])
+  @@index([signedToken])
+  @@index([status])
+}
+
+model SubcontractorStatusUpdate {
+  id                 String           @id @default(uuid())
+  jobId              String
+  job                SubcontractorJob @relation(fields: [jobId], references: [id])
+  status             SubcontractorJobStatus
+  notes              String?
+  podPhotoUrl        String?
+  deliveryTime       DateTime?
+  source             String           // 'TOKEN_LINK' | 'EMAIL_PARSE' | 'MANUAL'
+  recordedBy         String?          // userId if manual
+  createdAt          DateTime         @default(now())
+
+  @@index([jobId])
+}
+
+// ─── Rollout Projects ─────────────────────────────────────────────────────────
+
+model RolloutProject {
+  id                   String               @id @default(uuid())
+  projectCode          String               @unique
+  customerId           String
+  customer             Customer             @relation(fields: [customerId], references: [id])
+  projectName          String
+  coordinatorId        String
+
+  totalSites           Int                  @default(0)
+  totalM3              Float                @default(0)
+  totalRevenueCents    Int                  @default(0)
+  totalCostCents       Int                  @default(0)
+  marginTargetPercent  Float                @default(20)
+
+  status               RolloutProjectStatus @default(DRAFT)
+  startDate            DateTime?
+  endDate              DateTime?
+
+  consignments         Consignment[]
+  waves                RolloutWave[]
+  pricing              RolloutPricing[]
+  alerts               RolloutAlert[]
+
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([projectCode])
+  @@index([customerId])
+  @@index([status])
+}
+
+model RolloutWave {
+  id           String            @id @default(uuid())
+  projectId    String
+  project      RolloutProject    @relation(fields: [projectId], references: [id])
+  waveNumber   Int
+  waveName     String
+  plannedDate  DateTime?
+  status       RolloutWaveStatus @default(PLANNED)
+  siteCount    Int               @default(0)
+
+  consignments Consignment[]
+
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([projectId])
+  @@unique([projectId, waveNumber])
+}
+
+model RolloutPricing {
+  id                  String         @id @default(uuid())
+  projectId           String
+  project             RolloutProject @relation(fields: [projectId], references: [id])
+  chargeType          ChargeType
+  unitRateCents       Int
+  volumeDiscountTier  Int?
+  description         String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  @@index([projectId])
+}
+
+model RolloutAlert {
+  id          String         @id @default(uuid())
+  projectId   String
+  project     RolloutProject @relation(fields: [projectId], references: [id])
+  alertType   String
+  message     String
+  isRead      Boolean        @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime       @default(now())
+
+  @@index([projectId])
+  @@index([isRead])
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id              String          @id @default(uuid())
+  entityType      AuditEntityType
+  entityId        String
+  action          String
+  previousValue   Json?
+  newValue        Json?
+  userId          String
+  timestamp       DateTime        @default(now())
+
+  consignmentId   String?
+  consignment     Consignment?    @relation(fields: [consignmentId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([consignmentId])
+  @@index([timestamp])
+}
+
+// ─── Notification Model ───────────────────────────────────────────────────────
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  subject     String
+  body        String
+  channel     String   // 'EMAIL' | 'SMS' | 'INTERNAL'
+  isRead      Boolean  @default(false)
+  relatedType String?
+  relatedId   String?
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+}

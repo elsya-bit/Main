@@ -1,0 +1,42 @@
+{
+  "name": "snapes-tms-kernel",
+  "version": "1.0.0",
+  "description": "Snapes Project Logistics — TMS Operational Kernel",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "ts-node prisma/seed.ts",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.0",
+    "@fastify/cors": "^9.0.1",
+    "@prisma/client": "^5.18.0",
+    "bullmq": "^5.12.0",
+    "fastify": "^4.28.0",
+    "ioredis": "^5.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^10.0.0",
+    "zod": "^3.23.8"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.5.0",
+    "@types/uuid": "^10.0.0",
+    "@vitest/coverage-v8": "^2.0.5",
+    "prisma": "^5.18.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}
