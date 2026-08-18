@@ -50,6 +50,7 @@ Not a spreadsheet-to-dashboard conversion. The spreadsheet's numeric layer is la
 The MVP is three things:
 
 1. **A weekly submission form** that replaces the current one and, critically, *forces an exception record whenever a count is non-zero* — turning "1 late delivery" into "1 late delivery, here is which consignment, why, and what we're doing".
+
 2. **An exception & corrective action register** — the comment threads, structured, owned, dated, and closable, visible to both parties.
 3. **A Woolworths-facing performance view** built around volume, normalised exception rates, and open commitments — with DIFOT present but *deliberately demoted* from hero metric to one line among several, because at 99.90% lifetime it carries almost no information.
 
@@ -109,6 +110,7 @@ No AI summarisation, no predictive analytics, no relationship score, no benchmar
 **[FACT]** Comments are anchored almost exclusively to **column D — late deliveries** (D4, D14, D19, D28, D79, D86, D87, D96, D111, D176, D201, D221, D229, D230, D232, D233, D234, D243, D247, D256, D260, D261, D265). Two are anchored to A1 and B296, and one to E51.
 
 **[FACT]** Two comments are **assigned tasks** with recorded assignment history:
+
 - E51 (Jun 2021): *"@jeffrey@snapes.com.au @operations@snapes.com.au Hi Jeff, can you please complete this field?"* — assigned to Jeffrey, then **reassigned to operations two months later**.
 - B296 (Mar 2026): *"@furqan@snapes.com.au Hi Furqan, can you please update for February for our catch up today."* — marked done.
 
@@ -185,6 +187,7 @@ No AI summarisation, no predictive analytics, no relationship score, no benchmar
 **[INTERP]** Three consequences:
 
 1. **DIFOT is not comparable across the join without restatement.** Legacy DIFOT deducts damages; current practice does not. Because damages are recorded as zero in every period of both eras, the two formulas happen to produce identical results — **but only by accident.** If damages are ever captured properly, the definitions diverge.
+
 2. **Safety incident reporting was silently dropped in June 2020.** The legacy sheet recorded it (one non-zero week, 13 Oct 2019). The current sheet has no equivalent field. **[CONFIRM]** Was this a deliberate agreement, or attrition?
 3. **Legacy notes were dropped.** The legacy sheet carries two standing operating constraints as row labels — *"No stock to be stored in your sheds at any time"* and *"Communication to come from EPM only for PNP despatches. Everything else to come from EL."* **[FACT]** Neither appears in the current sheet. **[INTERP]** These are contractual/operational rules, not KPIs, and they were lost in the format change. **[CONFIRM]** Whether both still apply.
 
@@ -195,7 +198,7 @@ No AI summarisation, no predictive analytics, no relationship score, no benchmar
 Every measure present in either era. **Historical coverage** and **data quality** are **[CALC]**; **business value** and **recommended status** are **[REC]**.
 
 | # | KPI (as named) | Definition (as determinable) | Calculation | Unit | Freq | Target | Source | Coverage | Quality | Business value | Recommended status | Client-facing | Notes |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | K1 | DIFOT – total number of deliveries (consignment notes) | Count of consignment notes despatched in the week | Manual count | count | Weekly | none | **[ASSUME]** TMS/consignment register | 2017-07 → 2026-05, complete | **High** | The service denominator and the primary activity measure | **Keep** — promote to a headline volume metric | Yes | Named "DIFOT –" but it is a volume field |
 | K2 | DIFOT – total number of late deliveries | Count of consignments not delivered on the due date/time | Manual count | count | Weekly | none | Woolworths notification + Snapes records | 2017-07 → 2026-05, complete | **Medium** | The only exception field with real signal | **Keep + Modify** — must carry an exception record | Yes | Comments show it absorbs *wrong-address* and *missed-pickup* events too |
 | K3 | DIFOT (derived) | Legacy: `(del − late − damaged)/del`. Current: `1 − late/del`, partial | Formula | % | Weekly | conflicting | Derived | 2017-07 → 2024-07 then stops | **Low** (formula stops, definitions differ) | Contractual service headline | **Modify + Clarify** — restate, re-target, demote | Yes | 92.6% of weeks = exactly 100% |
@@ -220,6 +223,7 @@ Every measure present in either era. **Historical coverage** and **data quality*
 ## 5.1 DIFOT — the target problem
 
 **[FACT]** The legacy sheet holds **three different DIFOT targets at once**:
+
 - Cell `B7`, on the DIFOT row: **0.95**
 - Cell `B8`, labelled "DIFOT Target": **0.98**
 - Every one of the 158 weekly cells in row 8: **0.99**
@@ -257,6 +261,7 @@ Every measure present in either era. **Historical coverage** and **data quality*
 **[CALC]** Zero for all 310 weeks: damages (K6), delivery issues (K7), packaging issues (K8), unauthorised returns (K12). Non-zero once in 464 weeks: 24hr collection misses (K5).
 
 **[FACT]** Over the same period, the comment layer records — among others:
+
 - *"Vehicle breakdown on route to the delivery this morning. Additional truck was dispatched to cross load and recover."* (Nov 2021) → K7 recorded **0**
 - *"Lansell Plaza – driver refused to pick up 28/8."* (Aug 2020) → K7 recorded **0**
 - *"Union Road Metro: DSCs 3505593, 3505594, 3717686 Delivered to Ascot Vale store instead of Union Road Metro"* (Apr 2024) → K12 recorded **0**
@@ -525,6 +530,7 @@ The busiest quartile has the *lowest* late rate. **[INTERP]** Snapes handles pea
 Three shifts:
 
 1. **From a return to a record.** Today Snapes submits data *to* Woolworths. Tomorrow both parties look at the same record, and Woolworths-accountable items (collection notice, invoice ageing) sit in it as equals.
+
 2. **From counting to closing.** The workbook counts things. It has no concept of an issue being *resolved*. The platform's defining feature is that an exception has a lifecycle.
 3. **From monthly retrospective to weekly visibility.** Data is already captured weekly. **[FACT]** It is simply never seen weekly. Publishing the same data on a weekly cadence is close to zero additional effort and is the single highest-leverage change available.
 
@@ -629,13 +635,18 @@ Four status lines, one row, fixed order, always present: **Service · Volume · 
 One attention band directly beneath, listing only rule-triggered items, most material first. When empty it says so explicitly. **[REC]** Maximum five items; if more qualify, show the top five and a count.
 
 **Attention rules — [REC], all thresholds [CONFIRM]:**
+
 1. DIFOT below agreed target for the period *(blocked until the target is confirmed)*
+
 2. Any exception open more than 14 days without an owner
 3. Any corrective action past its due date
+
 4. Any exception category recurring within 90 days
 5. Demurrage value more than 50% above the trailing 12-month monthly average
+
 6. Weekly submission missing or late
 7. Outstanding invoices >30 days above an agreed threshold
+
 8. Data completeness below 100% for the period
 
 **120 seconds — "What happened, why, and what is being done?"**
@@ -654,10 +665,13 @@ The 13-month DIFOT and exception-rate trend, then the open-commitment list. Ever
 **Structure — seven blocks, in this order:**
 
 1. **Period** — "Since our review on Monday 6 July 2026 · 4 weeks · Reporting month June 2026"
+
 2. **Performance** — DIFOT, exception rate, both vs the prior review period
 3. **Volume** — pallet spaces and consignments moved, vs prior period and same period last year
+
 4. **What went well** — **[REC]** maximum two items, each with a number attached. **[INTERP]** Unlimited "what went well" is where a client-facing dashboard turns into self-promotion. Two, evidenced, is credible; six is a sales pitch.
 5. **Exceptions** — count by category, each linked
+
 6. **Commitments** — closed since last review / still open / overdue
 7. **Next focus** — one or two items Snapes is prioritising, authored, not generated
 
@@ -690,6 +704,7 @@ The brief proposed ten sections. **[REC]** We recommend nine, reordered, with re
 ## 17.2 Meeting Mode behaviour
 
 **[REC]**
+
 - **Frozen data.** Opening Meeting Mode for a month locks that month's figures. **[INTERP]** Numbers changing mid-meeting is fatal to trust.
 - **One screen per section**, forward/back navigation, section list always visible.
 - **Live capture.** New actions are recorded during the meeting, in the record, with owner and due date. **[REC]** This is the feature that removes the most Snapes admin — no post-meeting minutes to transcribe.
@@ -732,16 +747,22 @@ The brief proposed ten sections. **[REC]** We recommend nine, reordered, with re
 **[REC]** Built from **[FACT]** the 26 comments:
 
 1. **Late delivery** — missed date or time slot *(most common; e.g. "Missed delivery date of 23/4")*
+
 2. **Delivered to wrong location** — *"Delivered to Ascot Vale store instead of Union Road Metro"*; *"sent to Norwest instead of Scoresby"*; *"IWP sent to store instead of 3PL"* — **[INTERP]** at least six documented instances; **currently has no field and is recorded as "late"**
 3. **Missed collection / pickup** — *"Missed pick up from Highett"*; *"driver refused to pick up"*; *"6 Pallets for scrapping not collected"*
+
 4. **Equipment / asset not recovered** — *"Epsom equipment return did not occur"*
 5. **Programme / rollout miss** — *"11 stores not delivered by 16/10/23"*; *"missed 6 stores"* — **[INTERP]** materially different from a single late delivery: one root cause, many failures
+
 6. **Vehicle / operational disruption** — *"Vehicle breakdown on route"*
 7. **Futile delivery**
+
 8. **Demurrage / detention**
 9. **Damage**
+
 10. **Packaging**
 11. **Documentation / data error** — *"Data Entry error"*; *"address changed in DSC"*
+
 12. **Collection notice not given** — Woolworths-accountable
 13. **Safety incident**
 
@@ -753,6 +774,7 @@ The brief proposed ten sections. **[REC]** We recommend nine, reordered, with re
 Scheduling / allocation · Resource availability · Vehicle or equipment failure · Site access or constraint · Information not available at booking · Booking or documentation error · Third-party carrier · Volume or capacity · External (weather, traffic, incident) · Under investigation · Undetermined
 
 **[REC]** Language rules, enforced in field labels and help text:
+
 - The field is **"Accountable party"**, never "At fault" or "Responsible for the failure"
 - **"Undetermined"** is always available and is a legitimate final state
 - **"Shared"** exists because **[FACT]** the Epsom exchange is exactly that: a routine booking on one side, unstated access constraints on the other
@@ -824,7 +846,9 @@ Plus two terminal exits: `Superseded` and `Not proceeding` (both require a reaso
 | Linked exceptions | Yes | – |
 
 **[REC]** Two hard rules:
+
 1. **No initiative may be created without naming the metric it should move.** Otherwise it becomes an activity log.
+
 2. **[FACT] The workbook contains no improvement initiatives.** We have invented none. The structure launches empty, and **[REC]** the section is hidden from the client view until the first initiative is agreed — an empty "Continuous Improvement" page on a client dashboard actively damages credibility.
 
 ---
@@ -932,7 +956,9 @@ Plus two terminal exits: `Superseded` and `Not proceeding` (both require a reaso
 **[REC] Draft → Submitted → Approved → Published.** Four states, one approval gate.
 
 **[REC]** This is the right level of workflow, not over-engineering, for three evidenced reasons:
+
 1. **[FACT]** Rows 309–313 are manually yellow-highlighted — Snapes is already tracking an informal "not yet reviewed" state. The workflow formalises something that exists.
+
 2. **[FACT]** Comments E51 and B296 show data being chased and reassigned. A submitted-but-unapproved state makes that visible instead of invisible.
 3. **[REC]** Internal commentary and cause attribution must never reach the client unreviewed. The approval gate is the control.
 
@@ -955,16 +981,22 @@ Plus two terminal exits: `Superseded` and `Not proceeding` (both require a reaso
 **[REC]**
 
 1. **Required fields** — consignments, pallet spaces, and each exception count. Blank is not submittable.
+
 2. **Blank ≠ zero.** Explicit "0" entry required; a skipped field blocks submission. **[CALC]** Directly addresses DQ-7.
 3. **Duplicate week prevention** — one submission per week-ending date, enforced at the data layer. **[CALC]** Addresses DQ-2.
+
 4. **Missing period detection** — the system knows which weeks are due and flags gaps. **[CALC]** Addresses DQ-3.
 5. **Week-ending date validation** — Sundays only, system-generated, not typed. **[CALC]** Addresses DQ-4.
+
 6. **Negative value prevention** on all counts and values.
 7. **Percentage validation** — no derived percentage may exceed 100% or fall below 0%; violations block publication rather than rendering. **[CALC]** Addresses DQ-5.
+
 8. **Denominator floor** — DIFOT suppressed below the minimum-volume threshold; zero-consignment weeks never produce a percentage. **[CALC]** Addresses DQ-8 and DQ-9.
 9. **Exception count reconciliation** — if late = 3, exactly three exception records must exist. Counts become derived, not typed.
+
 10. **Demurrage pairing** — a value requires a count and vice versa. **[CALC]** Addresses DQ-11.
 11. **Created by / updated by / timestamps** on every record.
+
 12. **Publication status** — Draft / Submitted / Approved / Published. Woolworths sees only Published.
 13. **Amendment reason** — mandatory on any change to a published figure.
 
@@ -1045,11 +1077,15 @@ Outlier warnings against trailing averages · soft warning on an all-zero except
 ## 27.4 Migration principles
 
 **[REC]**
+
 1. **Import as-recorded.** Never silently correct. Every correction is a separate, logged, reasoned amendment.
+
 2. **Stamp the definition era** on every imported record — `legacy_2017_2020` or `current_2020_2026` — so any cross-era comparison declares itself.
 3. **Recompute all derived values** from source counts under the stated formula. Import no calculated fields.
+
 4. **Import "not captured" as null, never zero.** The single most consequential migration decision in this project.
 5. **Convert the 26 comments by hand** into exception records with date, reference, site, category and description. **[INTERP]** This is perhaps four hours of work and produces the platform's entire founding exception history — including six documented wrong-location deliveries that currently exist nowhere as data. **[REC]** Do it.
+
 6. **Reconciliation report** before go-live: row counts, period totals, and each excluded record with its reason, agreed with Snapes and shared with Woolworths.
 
 ---
@@ -1309,13 +1345,17 @@ Populated with the actual measures, values and incidents found in the workbook. 
 Did my stores get their freight, on the day, at the right address. When something is missed, does someone tell me before I find out from the store. Are the things I raised last month actually fixed. Do I have a reference number I can quote.
 
 **What is missing from the proposal**
+
 1. **My own reference numbers are not first-class.** I write in DSC, DTS, IWP and PO numbers. If I cannot search by `3505593`, I will not use this. → **[REC] Reference is a required, indexed, searchable field.**
+
 2. **No store-level view.** I think in stores — Castlemaine, Epsom, Union Road Metro. **[FACT]** Nine documented incidents name a store. → **[REC] Site is a required field and a first-class filter from MVP.**
 3. **No programme/rollout dimension.** **[FACT]** My two worst events were a bread-prop rollout and a long-life rollout, each affecting 6–11 stores. → **[REC] "Programme" as an optional grouping on exceptions; a rollout miss is one cause with many failures.**
+
 4. **Nothing tells me how fast Snapes responds.** **[FACT]** My Epsom comment sat 19 days. → **[REC] Response-time indicator on every exception thread.**
 5. **I cannot raise an exception myself.** Today I write a comment and it becomes a record. → **[REC] Woolworths must be able to raise an exception, not just comment on one. This is the single most-requested capability the evidence supports.**
 
 **What feels like Snapes self-promotion**
+
 - "What Went Well" — tolerable at two evidenced items; **[REC]** any more and I stop reading the section.
 - A "Relationship Health" panel written by the supplier. **[REC]** Acceptable only because it shows evidence and never a score. If it ever gains a score, it becomes marketing.
 - Any DIFOT figure displayed against a target Snapes chose. → **[REC] Show "Target not yet agreed" until it is jointly agreed. That absence is more credible than a convenient number.**
@@ -1368,14 +1408,19 @@ Weekly DIFOT percentages at low volume. The seasonal profile beyond one glance. 
 Changes made after both critiques:
 
 1. **Woolworths can raise an exception directly.** Moved from Phase 2 to **MVP** (§29.1). Without it, the platform is less capable than the Excel comment thread it replaces.
+
 2. **Site/store and Reference are required, indexed and filterable** from MVP (§29.1).
 3. **Programme/rollout grouping** added to the exception record as optional (§29.1).
+
 4. **Response-time indicator** on exception threads (§29.1).
 5. **Permanent, prominent capture-gap disclosure** on the Performance page (§29.1, §30). The design owns the six-year gap rather than hiding behind 100%.
+
 6. **DIFOT target renders as "Not yet agreed"** until jointly agreed — no invented target ever ships.
 7. **Damage and safety reinstatement moved out of MVP** into a staged rollout with an agreed start date communicated to Woolworths (§30).
+
 8. **Continuous Improvement hidden from client view** until a first initiative exists (§20).
 9. **Meeting sequence reordered** — commitments second, volume third (§17.1).
+
 10. **Hard cutover from Excel confirmed** as a delivery requirement, not a preference (§30).
 
 ---
@@ -1457,19 +1502,25 @@ TMS integration to pre-populate consignments and pallet spaces · finance-system
 ## Critical — before build
 
 1. **What is the agreed DIFOT target?** **[FACT]** The workbook holds 0.95, 0.98 and 0.99 simultaneously, and the current sheet holds none. We will not display a target we cannot source. *(CR-1)*
+
 2. **Is DIFOT calculated on consignment notes, with damaged/short deliveries deducted — as the legacy formula did — or on late deliveries only, as current practice does?** They give the same answer today only because damages are recorded as zero. *(CR-2)*
 3. **We are reinstating capture of damages, wrong-location deliveries, missed collections and safety incidents. Our reported exception counts will rise. Do you want to agree how that transition is presented before it starts?** *(CR-2)* — **[INTERP]** the highest-trust question in this list.
+
 4. **Would weekly visibility be useful, or does monthly suit your review rhythm?** Data is already captured weekly. *(CR-15)*
 5. **Which measure best represents the value of this work to you — pallet spaces, consignments, or something not currently measured?** **[CALC]** Over the last 52 weeks consignments fell 38% while pallet spaces fell 15%. *(CR-10)*
+
 6. **When a collection notice is given with less than 24 hours' warning, or an invoice sits beyond 30 days, is it useful for those to appear in the shared record?** Both are already in the workbook, both are Woolworths-side. *(CR-14)*
 7. **Do you want the ability to raise an exception directly, rather than commenting on our submission?**
+
 8. **What is the right escalation threshold — what makes an issue something your management should see?**
 
 ## Useful — future enhancement
 
 9. Should performance be viewable by store or by programme/rollout? **[FACT]** Both are named in nearly every incident record.
+
 10. Do the two legacy operating notes still apply? *(CR-7)*
 11. Is there a Woolworths-side system that could exchange consignment or delivery data directly?
+
 12. Are there upcoming programmes we should plan capacity around? **[CALC]** Oct–Nov is the demonstrable peak.
 13. Are there measures Woolworths reports internally on Snapes that we do not see?
 
@@ -1482,21 +1533,28 @@ TMS integration to pre-populate consignments and pallet spaces · finance-system
 ## Critical — before build
 
 1. **Damages, delivery issues, packaging issues and unauthorised returns have been zero for 310 consecutive weeks, while the comment thread records breakdowns, refused pickups and wrong-address deliveries. Were these genuinely zero, or not captured?** *(CR-2)* — the answer changes the migration, the baselines, and the launch messaging.
+
 2. **Who owns the weekly submission, and who is their backup?** **[FACT]** Comment E51 shows a request assigned to Jeffrey and reassigned to operations two months later.
 3. **Who approves data before Woolworths sees it?**
+
 4. **Where do consignment counts and pallet spaces come from — a TMS report, a dispatch sheet, or manual count?** *(CR-8)* Determines whether entry can be pre-populated.
 5. **Where does the outstanding-invoice figure come from, and what changed in 2023?** **[CALC]** Weekly average fell from $170,779 (2022) to $291 (2025). *(CR-6)*
+
 6. **Can Snapes reliably capture a site/store and a consignment reference on every exception?** **[FACT]** Woolworths already does, in their comments. This is required from MVP.
 7. **Who owns an exception once raised, and who owns a corrective action?**
+
 8. **Is Snapes willing to publish "not captured" for the 2020–2026 exception fields rather than "0"?** **[INTERP]** A commercial decision, not a technical one — and the most important trust decision in the project.
 
 ## Important — before go-live
 
 9. Was safety incident reporting deliberately dropped in June 2020? *(CR-4)*
+
 10. Is the 12-month futile-delivery zero run real? *(CR-11)*
 11. What caused the April–May 2026 demurrage spike? **[CALC]** $3,488 across FY26 against $1,400 in the whole of FY25.
+
 12. What drove the shift to fewer, larger consignments? *(CR-10)*
 13. Should the platform ever cover other Snapes entities or clients? **[FACT]** The `3PL` column suggests it was designed for it.
+
 14. Was the triplicate 30 May 2021 week a duplicate submission? *(CR-12)*
 15. What was actually presented in past KPI meetings? *(CR-9)*
 
@@ -1507,31 +1565,35 @@ TMS integration to pre-populate consignments and pallet spaces · finance-system
 Phase 2 (technical architecture and prototyping) should not begin until:
 
 **Product decisions**
-- [ ] MVP scope (§32) reviewed and approved by Snapes management
-- [ ] The DIFOT demotion decision made — is Snapes willing to stop leading with 99.90%?
-- [ ] The "not captured" vs "zero" decision made for the 2020–2026 exception fields
-- [ ] The capture-gap disclosure agreed as a permanent product feature
-- [ ] Hard cutover from Excel agreed, with a date
+
+- ☐ MVP scope (§32) reviewed and approved by Snapes management
+- ☐ The DIFOT demotion decision made — is Snapes willing to stop leading with 99.90%?
+- ☐ The "not captured" vs "zero" decision made for the 2020–2026 exception fields
+- ☐ The capture-gap disclosure agreed as a permanent product feature
+- ☐ Hard cutover from Excel agreed, with a date
 
 **Data decisions**
-- [ ] DIFOT target confirmed with Woolworths, or explicitly deferred with "not yet agreed" accepted as the launch state
-- [ ] Migration treatment agreed for the triplicate week, the four missing weeks, the Monday week, the 0.1-consignment row, and all blank fields
-- [ ] Minimum volume floor for DIFOT display agreed
-- [ ] Exception category list reviewed by both Snapes operations and Woolworths
-- [ ] Cause category list reviewed and confirmed neutral in language
+
+- ☐ DIFOT target confirmed with Woolworths, or explicitly deferred with "not yet agreed" accepted as the launch state
+- ☐ Migration treatment agreed for the triplicate week, the four missing weeks, the Monday week, the 0.1-consignment row, and all blank fields
+- ☐ Minimum volume floor for DIFOT display agreed
+- ☐ Exception category list reviewed by both Snapes operations and Woolworths
+- ☐ Cause category list reviewed and confirmed neutral in language
 
 **Operational decisions**
-- [ ] Weekly submission owner and backup named
-- [ ] Approver named
-- [ ] Weekly submission deadline agreed
-- [ ] Exception and action ownership model agreed
-- [ ] Source of every MVP field documented (system, report, or manual)
+
+- ☐ Weekly submission owner and backup named
+- ☐ Approver named
+- ☐ Weekly submission deadline agreed
+- ☐ Exception and action ownership model agreed
+- ☐ Source of every MVP field documented (system, report, or manual)
 
 **Client engagement**
-- [ ] Woolworths briefed on the platform's intent — shared record, not supplier report
-- [ ] The "our exception numbers will rise" conversation held **before** launch
-- [ ] Woolworths' ability to raise exceptions and comment agreed
-- [ ] Publication cadence agreed (weekly or monthly)
+
+- ☐ Woolworths briefed on the platform's intent — shared record, not supplier report
+- ☐ The "our exception numbers will rise" conversation held **before** launch
+- ☐ Woolworths' ability to raise exceptions and comment agreed
+- ☐ Publication cadence agreed (weekly or monthly)
 
 **Explicitly not required before Phase 2:** technology stack, hosting, authentication design, database schema, visual design system, integrations. **[REC]** All are Phase 2 outputs, and none should influence the product decisions above.
 
@@ -1584,8 +1646,10 @@ A dashboard version of the spreadsheet. AI summaries. Predictive analytics. A re
 ## 4. The most important KPI/data questions requiring confirmation
 
 1. **What is the agreed DIFOT target?** Three conflicting values exist; the current sheet has none. *(CR-1)*
+
 2. **Were the four zero-forever fields genuinely zero, or never captured?** *(CR-2)*
 3. **Is DIFOT calculated with damages deducted, or on lateness alone?** *(CR-2)*
+
 4. **What changed in 2023 to collapse outstanding invoices from $170,779 to $291 per week?** *(CR-6)*
 5. **Can Snapes capture site and consignment reference on every exception?** Woolworths already does.
 
@@ -1602,10 +1666,13 @@ A dashboard version of the spreadsheet. AI summaries. Predictive analytics. A re
 ## 6. What Phase 2 should accomplish
 
 1. **Confirm the eight critical Snapes questions and the eight critical Woolworths questions** (§34–35). Everything else waits on these.
+
 2. **Design the data model** — weekly submission, exception, action, initiative, definition, amendment log — with the definition-era stamp and null-vs-zero distinction built in at the foundation, not bolted on.
 3. **Specify the migration** in executable detail, with a reconciliation report agreed before any import runs.
+
 4. **Prototype three screens only** — Executive Overview, Exceptions & Actions, Weekly Entry — and test them with the actual users: the Snapes person who submits, the Snapes manager who approves, and the Woolworths operational stakeholder.
 5. **Resolve the target question** with Woolworths and encode it, with its source and agreement date, in the KPI definition.
+
 6. **Define the cutover** — go-live date, archive of the workbook, first published period, first Meeting Mode session.
 7. **Do not** select a technology stack before steps 1–4 are complete.
 
